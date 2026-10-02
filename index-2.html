@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Will Builder V2 — LLB Year 3</title>
+<style>
+:root{--navy:#172b4d;--blue:#2b5c91;--ink:#172033;--muted:#637083;--line:#d9e0e8;--bg:#f4f7fb;--white:#fff;--good:#e8f6ed;--warn:#fff4d6;--bad:#ffeaea}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Arial}
+header{background:var(--navy);color:white;padding:24px}.wrap{max-width:1180px;margin:auto}.brand{display:flex;justify-content:space-between;gap:20px;align-items:center}h1{margin:0;font-size:28px}header p{margin:4px 0 0;color:#dbe6f4}
+main{max-width:1180px;margin:22px auto;padding:0 14px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+button{font:inherit;cursor:pointer;border:0;border-radius:9px;padding:10px 14px;font-weight:700}.primary{background:var(--blue);color:white}.secondary{background:#e8edf3;color:var(--ink)}.danger{background:#8c3030;color:white}.small{padding:7px 10px;font-size:13px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:15px;padding:22px;margin-bottom:16px;box-shadow:0 2px 9px #172b4d0a}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+h2{margin:0 0 8px}h3{margin:18px 0 7px}.muted{color:var(--muted)}.tag{display:inline-block;border-radius:999px;background:#eaf0f7;padding:3px 8px;font-size:12px;font-weight:700}
+.notice{padding:13px 15px;border-radius:10px;margin:13px 0}.info{background:#eaf2fb}.warn{background:var(--warn)}.good{background:var(--good)}.bad{background:var(--bad)}
+label{font-weight:700;display:block;margin:13px 0 5px}input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cbd4df;border-radius:8px;background:white;font:inherit}textarea{min-height:100px}
+.hidden{display:none!important}.scenario{border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer}.scenario:hover{border-color:var(--blue)}.scenario.selected{outline:3px solid #d6e5f7;border-color:var(--blue)}
+.list{border:1px solid var(--line);border-radius:10px;padding:12px;margin:9px 0;background:#fbfcfe}.rowhead{display:flex;justify-content:space-between;gap:10px;align-items:center}.actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+.step{display:none}.step.active{display:block}.progress{height:8px;background:#dfe6ef;border-radius:99px;overflow:hidden;margin-bottom:16px}.progress>div{height:100%;background:var(--blue);width:0}
+table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+pre{white-space:pre-wrap;background:#fbfcfe;border:1px solid var(--line);padding:18px;border-radius:10px;font-family:Georgia,serif;line-height:1.65}
+.score{font-size:30px;font-weight:800}.rubric{display:grid;grid-template-columns:2fr 1fr;gap:10px;align-items:center}.rubric input{max-width:100px}
+footer{max-width:1180px;margin:auto;padding:0 14px 30px;color:var(--muted);font-size:13px}
+@media(max-width:800px){.grid,.grid3{grid-template-columns:1fr}.brand{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="wrap brand"><div><h1>Will Builder V2</h1><p>LLB Year 3 — Interactive Wills Drafting & Review</p></div><span class="tag">Classroom prototype</span></div></header>
+<main>
+<div class="toolbar">
+<button class="primary" onclick="show('student')">Student Mode</button>
+<button class="secondary" onclick="show('tutor')">Tutor Mode</button>
+<button class="secondary" onclick="show('about')">About / Sources</button>
+</div>
+
+<section id="home" class="card">
+<h2>Choose a mode</h2>
+<p class="muted">Students work from fictional client files. Tutor Mode reviews saved submissions on the same browser/device. No real client data should be entered.</p>
+<div class="grid">
+<div class="card"><h3>Student Mode</h3><p>Select a fictional client, complete the interview, draft a Will, identify risks and export a submission.</p><button class="primary" onclick="show('student')">Start student exercise</button></div>
+<div class="card"><h3>Tutor Mode</h3><p>View locally saved anonymous submissions, apply the formative rubric and export the class record as JSON/CSV.</p><button class="secondary" onclick="show('tutor')">Open tutor dashboard</button></div>
+</div>
+</section>
+
+<section id="student" class="hidden">
+<div class="card">
+<h2>Student exercise</h2><p class="muted">Use fictional facts only. Your task is to interview the client, identify missing information, draft appropriately, and critique the result.</p>
+<div class="grid">
+<div><label>Student / session ID</label><input id="sid" placeholder="e.g. S17 or leave blank for anonymous"></div>
+<div><label>Seminar group</label><input id="group" placeholder="e.g. LLB3-A"></div>
+</div>
+<h3>Choose a fictional client</h3><div id="scenarios" class="grid"></div>
+</div>
+<div id="wizard" class="card hidden">
+<div class="progress"><div id="bar"></div></div>
+<div class="step active" data-s="0"><h2>1. Client interview</h2><div id="facts" class="notice info"></div>
+<label>What further information must you obtain before drafting?</label><textarea id="questions" placeholder="List the questions you would ask the client."></textarea>
+<label>Capacity / instructions issue spotting</label><textarea id="capacity" placeholder="Identify what should be established or checked."></textarea>
+</div>
+<div class="step" data-s="1"><h2>2. Executors</h2><p class="muted">Who should administer the estate? Give a reason for your choice.</p><div id="execs"></div><button class="small secondary" onclick="addExec()">+ Add executor</button>
+<label>Reasoning</label><textarea id="execReason"></textarea></div>
+<div class="step" data-s="2"><h2>3. Specific gifts</h2><div id="gifts"></div><button class="small secondary" onclick="addGift()">+ Add gift</button>
+<div class="notice info">Drafting prompt: identify the asset and beneficiary precisely, then consider what happens if the asset is no longer owned or the beneficiary does not survive.</div></div>
+<div class="step" data-s="3"><h2>4. Residuary estate</h2><div id="residue"></div><button class="small secondary" onclick="addResidue()">+ Add beneficiary</button><div id="rerr" class="notice bad hidden"></div></div>
+<div class="step" data-s="4"><h2>5. Children & contingencies</h2>
+<label>Guardian wishes (if relevant)</label><input id="guardian">
+<label>Substitute guardian</label><input id="guardian2">
+<label>Survivorship / substitute beneficiary instructions</label><textarea id="survive"></textarea>
+<label>Funeral wishes</label><textarea id="funeral"></textarea>
+</div>
+<div class="step" data-s="5"><h2>6. Critical review</h2><div id="critique"></div>
+<label>Identify at least three risks or omissions in your own draft</label><textarea id="risks"></textarea>
+<label>What would require further professional investigation?</label><textarea id="investigate"></textarea>
+</div>
+<div class="step" data-s="6"><h2>7. Generated classroom draft</h2><div class="notice warn"><strong>Not for execution.</strong> This is a teaching draft generated from student inputs.</div><pre id="draft"></pre>
+<div class="actions"><button class="secondary" onclick="copyDraft()">Copy draft</button><button class="secondary" onclick="downloadSubmission()">Download submission</button><button class="primary" onclick="saveSubmission()">Save to tutor dashboard</button></div>
+<div id="saved" class="notice good hidden">Submission saved locally on this browser.</div>
+</div>
+<div class="actions"><button class="secondary" onclick="backStep()">Back</button><button class="primary" id="nextBtn" onclick="nextStep()">Continue</button></div>
+</div>
+</section>
+
+<section id="tutor" class="hidden">
+<div class="card"><h2>Tutor dashboard</h2><p class="muted">Submissions stored here are local to this browser. For multi-device collection, deploy a backend/LMS integration rather than relying on this local prototype.</p>
+<div id="submissions"></div>
+<div class="actions"><button class="secondary" onclick="exportCSV()">Export CSV</button><button class="secondary" onclick="exportJSON()">Export JSON</button><button class="danger" onclick="clearSubs()">Clear local submissions</button></div></div>
+<div id="marking" class="card hidden"><h2>Formative marking</h2><div id="markBody"></div></div>
+</section>
+
+<section id="about" class="hidden">
+<div class="card"><h2>About the prototype</h2>
+<div class="notice info"><strong>Educational use only.</strong> Use fictional scenarios. Do not enter real clients, students' family information, or sensitive personal data.</div>
+<h3>Core legal checkpoint</h3>
+<p>The prototype teaches students to distinguish drafting from execution. Under Wills Act 1837 s.9, formal requirements include writing, signature/intention and attestation by two witnesses present at the same time, subject to the statutory wording.</p>
+<h3>Suggested sources</h3>
+<ul><li>Wills Act 1837, s.9 — legislation.gov.uk</li><li>GOV.UK — Making a will: Make sure your will is legal</li><li>GOV.UK — Making a will: Write your will</li></ul>
+<h3>Teaching model</h3><p>Interview → issue spot → draft → challenge the draft → identify further investigation → reflect on execution.</p>
+</div></section>
+</main>
+<footer><p>Will Builder V2 is a teaching prototype, not legal advice or a professional will-drafting system. It does not determine testamentary capacity, undue influence, knowledge and approval, tax, beneficial ownership, family provision claims, probate outcomes, or validity of individual gifts.</p></footer>
+
+<script>
+const scenarios=[
+{id:'A',title:'The Blended Family',level:'Intermediate',facts:`Margaret Hughes, 67, is widowed and has two adult children, Daniel and Priya. She lives with her partner, Alex, who is not the parent of either child. Margaret owns her home, savings and a valuable collection of jewellery. She says she wants Alex “looked after” but ultimately wants the children to benefit.`},
+{id:'B',title:'The Young Family',level:'Intermediate',facts:`James Patel, 39, is married with two children aged 6 and 9. He wants his sister to care for the children if both parents die. He wants the children's inheritance protected until they are older. He has a mortgage, savings and life insurance.`},
+{id:'C',title:'The Complex Estate',level:'Advanced',facts:`Helen Morgan, 59, owns a family company shareholding, a holiday property in Spain, cryptocurrency, investments and valuable artwork. She wants different family members to receive different assets and wants the residue divided between three beneficiaries.`},
+{id:'D',title:'The Contentious Instructions',level:'Advanced',facts:`Robert Evans, 74, recently changed his mind about his estate. He has two adult children, one of whom he has not spoken to for several years. He wants a new partner to receive a substantial benefit and has mentioned making the new Will “quickly”.`}
+];
+let S={scenario:null,step:0,execs:[],gifts:[],residue:[]};
+function $(id){return document.getElementById(id)} function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function show(id){['home','student','tutor','about'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');if(id==='student')renderScenarios();if(id==='tutor')renderSubs();window.scrollTo(0,0)}
+function renderScenarios(){$('scenarios').innerHTML=scenarios.map(x=>`<div class="scenario ${S.scenario?.id===x.id?'selected':''}" onclick="choose('${x.id}')"><span class="tag">${x.level}</span><h3>${x.title}</h3><p>${x.facts}</p></div>`).join('')}
+function choose(id){S.scenario=scenarios.find(x=>x.id===id);S.step=0;S.execs=[];S.gifts=[];S.residue=[];$('wizard').classList.remove('hidden');$('facts').innerHTML='<strong>'+esc(S.scenario.title)+'</strong><br>'+esc(S.scenario.facts);renderAll();renderScenarios()}
+function addExec(){S.execs.push('');renderAll()} function addGift(){S.gifts.push({asset:'',beneficiary:''});renderAll()} function addResidue(){S.residue.push({name:'',share:''});renderAll()}
+function renderAll(){
+ $('execs').innerHTML=S.execs.map((x,i)=>`<div class="list"><div class="rowhead"><strong>Executor ${i+1}</strong><button class="small secondary" onclick="S.execs.splice(${i},1);renderAll()">Remove</button></div><label>Name</label><input value="${esc(x)}" oninput="S.execs[${i}]=this.value"></div>`).join('')||'<p class="muted">No executor added.</p>';
+ $('gifts').innerHTML=S.gifts.map((g,i)=>`<div class="list"><div class="rowhead"><strong>Gift ${i+1}</strong><button class="small secondary" onclick="S.gifts.splice(${i},1);renderAll()">Remove</button></div><label>Asset / gift</label><input value="${esc(g.asset)}" oninput="S.gifts[${i}].asset=this.value"><label>Beneficiary</label><input value="${esc(g.beneficiary)}" oninput="S.gifts[${i}].beneficiary=this.value"></div>`).join('')||'<p class="muted">No specific gifts.</p>';
+ $('residue').innerHTML=S.residue.map((r,i)=>`<div class="list"><div class="grid"><div><label>Beneficiary</label><input value="${esc(r.name)}" oninput="S.residue[${i}].name=this.value"></div><div><label>Share %</label><input type="number" min="0" max="100" value="${esc(r.share)}" oninput="S.residue[${i}].share=this.value"></div></div><button class="small secondary" onclick="S.residue.splice(${i},1);renderAll()">Remove</button></div>`).join('')||'<p class="muted">No residuary beneficiaries.</p>';
+ const total=S.residue.reduce((a,r)=>a+(+r.share||0),0);$('rerr').classList.toggle('hidden',Math.abs(total-100)<.001||S.residue.length===0);$('rerr').textContent=`Residuary shares total ${total}%. For this exercise they should total 100%.`;
+ const steps=document.querySelectorAll('.step');steps.forEach((x,i)=>x.classList.toggle('active',i===S.step));$('bar').style.width=(S.step/6*100)+'%';$('nextBtn').textContent=S.step===6?'Finished':'Continue';
+ if(S.step===5)renderCritique();if(S.step===6)$('draft').textContent=makeDraft();
+}
+function nextStep(){
+ if(!S.scenario)return;
+ if(S.step===1&&!S.execs.filter(Boolean).length){alert('Add at least one proposed executor.');return}
+ if(S.step===3){let t=S.residue.reduce((a,r)=>a+(+r.share||0),0);if(!S.residue.length||Math.abs(t-100)>.001){alert('For this exercise, residuary shares must total 100%.');return}}
+ if(S.step<6){S.step++;renderAll()}else{saveSubmission()}
+}
+function backStep(){if(S.step>0){S.step--;renderAll()}}
+function renderCritique(){
+ let issues=[];if(!($('questions').value||'').trim())issues.push('No further-information questions recorded.');if(!($('capacity').value||'').trim())issues.push('No capacity/instructions issue spotting recorded.');if(!S.execs.filter(Boolean).length)issues.push('No executor selected.');if(S.gifts.some(g=>!g.asset||!g.beneficiary))issues.push('An incomplete specific gift is present.');if(S.residue.some(r=>!r.name||!r.share))issues.push('An incomplete residuary share is present.');if(!($('risks').value||'').trim())issues.push('Student has not yet recorded three risks/omissions.');
+ $('critique').innerHTML=issues.length?`<div class="notice warn"><strong>Issues to address</strong><ul>${issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:'<div class="notice good"><strong>Automated checks passed.</strong> Now apply your legal judgment.</div>';
+}
+function makeDraft(){
+ let name=S.scenario?.title||'FICTIONAL CLIENT';let ex=S.execs.filter(Boolean).join(' and ')||'[EXECUTOR]';let d=`CLASSROOM DRAFT — NOT FOR EXECUTION\\nFICTIONAL CLIENT: ${name}\\n\\nLAST WILL AND TESTAMENT\\n\\n1. REVOCATION AND DECLARATION\\n[Drafting clause to be settled following full instructions.]\\n\\n2. EXECUTORS\\nI appoint ${ex} as my Executor(s).\\n\\n3. SPECIFIC GIFTS\\n`;S.gifts.forEach((g,i)=>d+=`${i+1}. I give ${g.asset||'[ASSET]'} to ${g.beneficiary||'[BENEFICIARY]'}.\\n`);if(!S.gifts.length)d+='No specific gifts recorded.\\n';d+='\\n4. RESIDUE\\n';S.residue.forEach(r=>d+=`• ${r.name||'[BENEFICIARY]'} — ${r.share||'[ ]'}%\\n`);d+=`\\n5. CHILDREN / CONTINGENCIES\\nGuardian: ${$('guardian').value||'[NOT RECORDED]'}\\nSubstitute guardian: ${$('guardian2').value||'[NOT RECORDED]'}\\nSurvivorship: ${$('survive').value||'[NOT RECORDED]'}\\n\\n6. FUNERAL WISHES\\n${$('funeral').value||'[NOT RECORDED]'}\\n\\n7. EXECUTION\\n[Execution formalities to be settled in accordance with applicable law.]\\n\\nSTUDENT REFLECTION\\nQuestions: ${$('questions').value}\\nRisks/omissions: ${$('risks').value}\\nFurther investigation: ${$('investigate').value}\\n\\nTEACHING DISCLAIMER\\nThis is a student exercise and is not a legally validated Will.`;
+ return d;
+}
+function payload(){return {id:Date.now().toString(36),student:$('sid').value||'Anonymous',group:$('group').value||'',scenario:S.scenario?.title,date:new Date().toISOString(),questions:$('questions').value,capacity:$('capacity').value,execs:S.execs,gifts:S.gifts,residue:S.residue,guardian:$('guardian').value,guardian2:$('guardian2').value,survive:$('survive').value,funeral:$('funeral').value,risks:$('risks').value,investigate:$('investigate').value,draft:makeDraft(),marks:null}}
+function saveSubmission(){let a=JSON.parse(localStorage.getItem('willV2Subs')||'[]');let p=payload();let i=a.findIndex(x=>x.id===p.id);if(i>=0)a[i]=p;else a.push(p);localStorage.setItem('willV2Subs',JSON.stringify(a));$('saved').classList.remove('hidden');renderSubs();alert('Saved to the local tutor dashboard.')}
+function copyDraft(){navigator.clipboard?.writeText($('draft').textContent).then(()=>alert('Draft copied.'))}
+function downloadSubmission(){let b=new Blob([JSON.stringify(payload(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='will-builder-submission.json';a.click()}
+function getSubs(){return JSON.parse(localStorage.getItem('willV2Subs')||'[]')}
+function renderSubs(){let a=getSubs();$('submissions').innerHTML=a.length?`<table><tr><th>Student</th><th>Scenario</th><th>Date</th><th>Action</th></tr>${a.map(x=>`<tr><td>${esc(x.student)}</td><td>${esc(x.scenario)}</td><td>${new Date(x.date).toLocaleString()}</td><td><button class="small secondary" onclick="mark('${x.id}')">Review / mark</button></td></tr>`).join('')}</table>`:'<p class="muted">No local submissions yet.</p>'}
+function mark(id){let a=getSubs(),x=a.find(z=>z.id===id);if(!x)return;let b=x.marks||{};$('marking').classList.remove('hidden');$('markBody').innerHTML=`<p><strong>${esc(x.student)} — ${esc(x.scenario)}</strong></p><div class="rubric">${['Issue spotting','Drafting precision','Residuary reasoning','Contingency planning','Critical evaluation','Professional responsibility'].map(k=>`<label>${k}</label><input type="number" min="0" max="10" value="${b[k]??''}" data-mark="${k}">`).join('')}</div><label>Tutor feedback</label><textarea id="feedback">${esc(b.feedback||'')}</textarea><div class="actions"><button class="primary" onclick="saveMark('${id}')">Save marking</button><button class="secondary" onclick="document.getElementById('marking').classList.add('hidden')">Close</button></div>`}
+function saveMark(id){let a=getSubs(),x=a.find(z=>z.id===id),m={};document.querySelectorAll('[data-mark]').forEach(i=>m[i.dataset.mark]=+i.value||0);m.feedback=$('feedback').value;x.marks=m;localStorage.setItem('willV2Subs',JSON.stringify(a));renderSubs();alert('Mark saved.')}
+function exportJSON(){downloadText('will-builder-submissions.json',JSON.stringify(getSubs(),null,2),'application/json')}
+function exportCSV(){let a=getSubs(),heads=['id','student','group','scenario','date','total_mark','feedback'];let rows=[heads,...a.map(x=>{let m=x.marks||{};let total=['Issue spotting','Drafting precision','Residuary reasoning','Contingency planning','Critical evaluation','Professional responsibility'].reduce((s,k)=>s+(+m[k]||0),0);return [x.id,x.student,x.group,x.scenario,x.date,total,m.feedback||''].map(v=>`"${String(v).replaceAll('"','""')}"`)})];downloadText('will-builder-submissions.csv',rows.map(r=>r.join(',')).join('\\n'),'text/csv')}
+function downloadText(name,text,type){let b=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click()}
+function clearSubs(){if(confirm('Clear all locally stored submissions?')){localStorage.removeItem('willV2Subs');renderSubs()}}
+renderScenarios();
+</script>
+</body></html>
